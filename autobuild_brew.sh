@@ -4,8 +4,6 @@
 # build script for OpenJailbreak (most libs)
 
 
-successLibs=()
-failedLibs=()
 requiredKegs=( "libtool" "zlib" "libplist" )
 libs=( "libusbmuxd-1" "libimobiledevice-1" "libcrippy-1" "libmacho-1" \
 	"libdyldcache-1" "libimg3-1" "libirecovery-2" "libmbdb-1" "libpartialzip-1" \
@@ -37,7 +35,7 @@ build_libs() {
 		else # use the number from the package's name instead (less accurate)
 			kegVersion=$(echo $i | sed 's/.*-//').0
 		fi
-		# Setting the keg's placement
+		# Setting the keg's place
 		kegDir=$cellar/$kegName/$kegVersion
 		# If the keg is up-to-date, skip it
 		if [ -d $kegDir ]; then
@@ -45,22 +43,23 @@ build_libs() {
 			continue
 		fi
 		echo "Configuring $kegName..."
-		# Make less visual trash
-		./autogen.sh > /dev/null
+		./autogen.sh > /dev/null # Makes less visual trash
 		./configure --prefix=$kegDir
 		echo "Building $kegName..."
 		make && make install
 		echo "Installing $kegName..."
 		brew link $kegName
-		cd ..
+		# Prevents any (possible) mistake from OpenJailbreak's scripts to "cd .." more/less than enough
+		cd $OJHome
 	done
 }
 
 function main {
+	OJHome=$(pwd)
 	requirements
 	build_libs
 }
 
 echo "OpenJailbreak library build script - DarkMalloc 2013"
-echo "Homebrew kegs version - Keyaku 2014"
+echo "Homebrew (kegs) version - Keyaku 2014"
 main

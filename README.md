@@ -3,7 +3,7 @@ Website: https://www.openjailbreak.org
 Twitter: @OpenJailbreak
 IRC: chat.freenode.net, #OpenJailbreak
 
-Adds fixes to minor issues, includes a (Home)brew-friendly installation script.
+Adds fixes to minor issues, includes a (Home)brew-friendly installation script (Mac OS X only).
 
 
 
@@ -25,4 +25,4 @@ Using the Homebrew script makes it more easy to update or uninstall the OpenJail
 without affecting much of the /usr/local directory and subdirectories.
 
 I shall update the brew script to add the possibility to uninstall all OpenJailbreak libs
-at once (in case anything major is broken).
+at once (in case anything major is broken) and the ability to install/reinstall a specific OpenJailbreak lib.

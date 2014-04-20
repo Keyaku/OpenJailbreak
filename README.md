@@ -1,4 +1,4 @@
-An unofficial Git to bump Joshua Hill's (a.k.a. DarkMalloc) OpenJailbreak project.
+An unofficial Git to bump Joshua Hill's (a.k.a. p0sixninja) OpenJailbreak project.
 Website: https://www.openjailbreak.org
 Twitter: @OpenJailbreak
 IRC: chat.freenode.net, #OpenJailbreak

@@ -4,7 +4,7 @@
 # build script for OpenJailbreak (most libs)
 
 
-requiredKegs=( "libtool" "zlib" "libplist" )
+requiredKegs=( "openssl" "libtool" "zlib" "libplist" )
 libs=( "libusbmuxd-1" "libimobiledevice-1" "libcrippy-1" "libmacho-1" \
 	"libdyldcache-1" "libimg3-1" "libirecovery-2" "libmbdb-1" "libpartialzip-1" \
 	"libtss-1" "libipsw-1" "libidevicebackup-1-0" "libidevicecrashreport-1" "libsyringe-1" )
@@ -12,16 +12,13 @@ cellar=/usr/local/Cellar
 
 requirements() {
 	# Homebrew already provides a working libplist keg; we shall use it
+	echo "Checking if required packages are installed..."
 	for i in "${requiredKegs[@]}"; do
-		if [ ! -e $cellar/$i ]; then
-			brew install $i
-		else
-			echo -e "$(brew ls $i --versions) is already installed.\n"
-		fi
+		if [ ! -e $cellar/$i ]; then brew install $i; fi
 	done
 }
 
-build_libs() {
+build_all_libs() {
 	# Starting installation of all OpenJailbreak libs
 	for i in "${libs[@]}"; do
 		# Grabbing the lib's name
@@ -57,7 +54,13 @@ build_libs() {
 function main {
 	OJHome=$(pwd)
 	requirements
-	build_libs
+	case $# in
+		0) echo "usage: ./autobuild_brew.sh" 
+		;;
+		1)
+		;;
+	esac
+	build_all_libs
 }
 
 echo "OpenJailbreak library build script - DarkMalloc 2013"

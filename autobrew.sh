@@ -19,7 +19,7 @@ libSrc="git://openjailbreak.org"
 # Strings
 welcomeMsg="OpenJailbreak library build script - DarkMalloc 2013\n \
 Homebrew (kegs) version - Keyaku 2014"
-usage="usage: ./autobuild_brew.sh [-i(nstall)] | [-u(ninstall)] ([OpenJailbreak Lib])" 
+usage="usage: ./autobrew.sh ([OpenJailbreak Lib])" 
 unsufArgs="Not enough arguments."
 invalidArgs="Invalid arguments."
 
@@ -89,12 +89,11 @@ function main {
 	OJHome=$(pwd)
 	requirements
 	case $# in
-		0) echo $unsufArgs; echo $usage
+		0) build_all_libs
 		;;
 		1) check_args; $?
 		;;
 	esac
-	build_all_libs
 }
 
 # Script starts HERE

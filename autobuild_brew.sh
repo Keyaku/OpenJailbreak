@@ -13,11 +13,15 @@ libs=( "libusbmuxd-1" "libimobiledevice-1" "libcrippy-1" "libmacho-1" \
 # Paths
 cellar=/usr/local/Cellar
 
+# Links
+libSrc="git://openjailbreak.org"
+
 # Strings
 welcomeMsg="OpenJailbreak library build script - DarkMalloc 2013\n \
-	Homebrew (kegs) version - Keyaku 2014"
+Homebrew (kegs) version - Keyaku 2014"
 usage="usage: ./autobuild_brew.sh [-i(nstall)] | [-u(ninstall)] ([OpenJailbreak Lib])" 
-unsufArgs="Not enough arguments"
+unsufArgs="Not enough arguments."
+invalidArgs="Invalid arguments."
 
 
 # Functions
@@ -36,35 +40,46 @@ requirements() {
 	done
 }
 
+prep_package() {
+	# Grabbing the lib's name
+	kegName=$(echo $keg | sed 's/-.*//')
+	echo "Fetching $kegName..."
+	git clone $libSrc/${keg}.git
+	cd $keg
+	# If configure.ac file exists, use the version that it provides (ugliest way but also the quickest)
+	if [ -e configure.ac ]; then
+		kegVersion=$(cat configure.ac | grep "AC_INIT" | cut -d',' -f2 | sed 's/ //' | sed 's/).*//')
+	else # use the number from the package's name instead (less accurate)
+		kegVersion=$(echo $keg | sed 's/.*-//').0
+	fi
+	# Setting the keg's place
+	kegDir=$cellar/$kegName/$kegVersion
+	# If the keg is up-to-date, skip it
+	if [ -d $kegDir ]; then
+		echo -e "$(brew ls $kegName --versions) is already installed and updated. Skipping.\n"
+		continue
+	fi
+}
+
+install_package() {
+	echo "Configuring $kegName..."
+	./autogen.sh
+	./configure --prefix=$kegDir
+	echo "Building $kegName..."
+	make && make install
+	echo "Installing $kegName..."
+	brew link $kegName
+}
+
 build_all_libs() {
 	# Starting installation of all OpenJailbreak libs
-	for i in "${libs[@]}"; do
-		# Grabbing the lib's name
-		kegName=$(echo $i | sed 's/-.*//')
-		echo "Fetching $kegName..."
-		git clone git://openjailbreak.org/${i}.git
-		cd $i
-		# If configure.ac file exists, use the version that it provides (ugliest way but also the quickest)
-		if [ -e configure.ac ]; then
-			kegVersion=$(cat configure.ac | grep "AC_INIT" | cut -d',' -f2 | sed 's/ //' | sed 's/).*//')
-		else # use the number from the package's name instead (less accurate)
-			kegVersion=$(echo $i | sed 's/.*-//').0
-		fi
-		# Setting the keg's place
-		kegDir=$cellar/$kegName/$kegVersion
-		# If the keg is up-to-date, skip it
-		if [ -d $kegDir ]; then
-			echo -e "$(brew ls $kegName --versions) is already installed and updated. Skipping.\n"
-			continue
-		fi
-		echo "Configuring $kegName..."
-		./autogen.sh > /dev/null # Makes less visual trash
-		./configure --prefix=$kegDir
-		echo "Building $kegName..."
-		make && make install
-		echo "Installing $kegName..."
-		brew link $kegName
-		# Prevents any (possible) mistake from OpenJailbreak's scripts for doing "cd .." more/less than enough
+	for keg in "${libs[@]}"; do
+		# Prepare our package!
+		prep_package
+		# Install it!
+		install_package
+		
+		# Prevents any (possible) mistake from OJ's scripts for doing "cd .." more/less than enough
 		cd $OJHome
 	done
 }
@@ -74,7 +89,7 @@ function main {
 	OJHome=$(pwd)
 	requirements
 	case $# in
-		0) echo unsufArgs; echo usage
+		0) echo $unsufArgs; echo $usage
 		;;
 		1) check_args; $?
 		;;
@@ -83,5 +98,5 @@ function main {
 }
 
 # Script starts HERE
-echo -e welcomeMsg 
+echo -e $welcomeMsg 
 main

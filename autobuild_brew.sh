@@ -4,11 +4,29 @@
 # build script for OpenJailbreak (most libs)
 
 
+# Libraries
 requiredKegs=( "openssl" "libtool" "zlib" "libplist" )
 libs=( "libusbmuxd-1" "libimobiledevice-1" "libcrippy-1" "libmacho-1" \
 	"libdyldcache-1" "libimg3-1" "libirecovery-2" "libmbdb-1" "libpartialzip-1" \
 	"libtss-1" "libipsw-1" "libidevicebackup-1-0" "libidevicecrashreport-1" "libsyringe-1" )
+
+# Paths
 cellar=/usr/local/Cellar
+
+# Strings
+welcomeMsg="OpenJailbreak library build script - DarkMalloc 2013\n \
+	Homebrew (kegs) version - Keyaku 2014"
+usage="usage: ./autobuild_brew.sh [-i(nstall)] | [-u(ninstall)] ([OpenJailbreak Lib])" 
+unsufArgs="Not enough arguments"
+
+
+# Functions
+check_args() {
+	# Checks for the available arguments, makes stuff out of them, returns the appropriate
+	#function to call
+	
+	return
+}
 
 requirements() {
 	# Homebrew already provides a working libplist keg; we shall use it
@@ -46,23 +64,24 @@ build_all_libs() {
 		make && make install
 		echo "Installing $kegName..."
 		brew link $kegName
-		# Prevents any (possible) mistake from OpenJailbreak's scripts to "cd .." more/less than enough
+		# Prevents any (possible) mistake from OpenJailbreak's scripts for doing "cd .." more/less than enough
 		cd $OJHome
 	done
 }
 
+# MAIN
 function main {
 	OJHome=$(pwd)
 	requirements
 	case $# in
-		0) echo "usage: ./autobuild_brew.sh" 
+		0) echo unsufArgs; echo usage
 		;;
-		1)
+		1) check_args; $?
 		;;
 	esac
 	build_all_libs
 }
 
-echo "OpenJailbreak library build script - DarkMalloc 2013"
-echo "Homebrew (kegs) version - Keyaku 2014"
+# Script starts HERE
+echo -e welcomeMsg 
 main

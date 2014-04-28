@@ -19,8 +19,9 @@ cd OpenJailbreak
 3- Use the original script provided by DarkMalloc (edited to fix typos):
 ./autobuild.sh
 OR, if you have Homebrew installed, I highly recommend doing:
-./autobuild_brew.sh
+./autobrew.sh
 
+This single command fetches and builds the latest versions of all OpenJailbreak libraries.
 Using the Homebrew script makes it more easy to update or uninstall the OpenJailbreak libs
 without affecting much of the /usr/local directory and subdirectories.
 

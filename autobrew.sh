@@ -6,30 +6,42 @@
 
 # Libraries
 requiredKegs=( "openssl" "libtool" "zlib" "libplist" )
-libs=( "libusbmuxd-1" "libimobiledevice-1" "libcrippy-1" "libmacho-1" \
+mainLibs=( "libusbmuxd-1" "libimobiledevice-1" "libcrippy-1" "libmacho-1" \
 	"libdyldcache-1" "libimg3-1" "libirecovery-2" "libmbdb-1" "libpartialzip-1" \
 	"libtss-1" "libipsw-1" "libidevicebackup-1-0" "libidevicecrashreport-1" "libsyringe-1" )
 
 # Paths
 cellar=/usr/local/Cellar
+OJHome=$(pwd)
 
 # Links
 libSrc="git://openjailbreak.org"
 
 # Strings
-welcomeMsg="OpenJailbreak library build script - DarkMalloc 2013\n \
-Homebrew (kegs) version - Keyaku 2014"
-usage="usage: ./autobrew.sh ([OpenJailbreak Lib])" 
+welcomeMsg="OpenJailbreak library build script - DarkMalloc 2013\n\
+Homebrew (kegs) version - Keyaku 2014\n"
+usage="usage: ./$0 ([OpenJailbreak Lib])" 
 unsufArgs="Not enough arguments."
 invalidArgs="Invalid arguments."
+conclusion="To uninstall a lib, execute the \"uninstall\" argument with brew, followed by \
+the lib name.\nHere's an example:\n \
+brew uninstall ${mainLibs[$(((RANDOM/1000)%10))]}"
 
 
 # Functions
 check_args() {
 	# Checks for the available arguments, makes stuff out of them, returns the appropriate
 	#function to call
+	if [ $(echo $1 | grep "help") ]; then
+		callMeUp="echo $usage"
+	elif [ $(echo ${mainLibs[@]} | grep $*) ]; then
+		libs=( $@ )
+		callMeUp="build_libs ${libs[@]}"
+	else
+		callMeUp="echo $invalidArgs"
+	fi
 	
-	return
+	return $callMeUp
 }
 
 requirements() {
@@ -44,7 +56,7 @@ prep_package() {
 	# Grabbing the lib's name
 	kegName=$(echo $keg | sed 's/-.*//')
 	echo "Fetching $kegName..."
-	git clone $libSrc/${keg}.git
+	if [ ! -d ./$keg ]; then git clone $libSrc/${keg}.git; fi
 	cd $keg
 	# If configure.ac file exists, use the version that it provides (ugliest way but also the quickest)
 	if [ -e configure.ac ]; then
@@ -52,7 +64,7 @@ prep_package() {
 	else # use the number from the package's name instead (less accurate)
 		kegVersion=$(echo $keg | sed 's/.*-//').0
 	fi
-	# Setting the keg's place
+	# Setting the keg's place in the Cellar
 	kegDir=$cellar/$kegName/$kegVersion
 	# If the keg is up-to-date, skip it
 	if [ -d $kegDir ]; then
@@ -63,7 +75,7 @@ prep_package() {
 
 install_package() {
 	echo "Configuring $kegName..."
-	./autogen.sh
+	./autogen.sh > /dev/null		# Makes less visual garbage
 	./configure --prefix=$kegDir
 	echo "Building $kegName..."
 	make && make install
@@ -71,8 +83,7 @@ install_package() {
 	brew link $kegName
 }
 
-build_all_libs() {
-	# Starting installation of all OpenJailbreak libs
+build_libs() {
 	for keg in "${libs[@]}"; do
 		# Prepare our package!
 		prep_package
@@ -82,20 +93,30 @@ build_all_libs() {
 		# Prevents any (possible) mistake from OJ's scripts for doing "cd .." more/less than enough
 		cd $OJHome
 	done
+	
+	echo $conclusion
 }
+
 
 # MAIN
 function main {
-	OJHome=$(pwd)
+	# First checks if the user has put too much gibberish as arguments
+	if [ $# -gt $(echo "${mainLibs[@]}" | wc -w) ]; then
+		echo $invalidArgs; echo $usage
+	fi
 	requirements
 	case $# in
-		0) build_all_libs
-		;;
-		1) check_args; $?
-		;;
+		# No arguments == builds all available libraries
+		0)	libs=( ${mainLibs[@]} )
+			build_libs
+			;;
+		# 1+ argument == runs check_args and whatever command is given by it
+		*)	check_args
+			$?	# Runs the "returned" command by check_args
+			;;
 	esac
 }
 
 # Script starts HERE
-echo -e $welcomeMsg 
+echo -e $welcomeMsg
 main

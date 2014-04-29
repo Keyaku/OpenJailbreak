@@ -4,44 +4,60 @@
 # build script for OpenJailbreak (most libs)
 
 
-# Libraries
+# LIBRARIES
 requiredKegs=( "openssl" "libtool" "zlib" "libplist" )
 mainLibs=( "libusbmuxd-1" "libimobiledevice-1" "libcrippy-1" "libmacho-1" \
 	"libdyldcache-1" "libimg3-1" "libirecovery-2" "libmbdb-1" "libpartialzip-1" \
 	"libtss-1" "libipsw-1" "libidevicebackup-1-0" "libidevicecrashreport-1" "libsyringe-1" )
 
-# Paths
+# PATHS
 cellar=/usr/local/Cellar
 OJHome=$(pwd)
 
-# Links
+# LINKS
 libSrc="git://openjailbreak.org"
+pingableHost="google.com"
 
-# Strings
+# STRINGS
 welcomeMsg="OpenJailbreak library build script - DarkMalloc 2013\n\
 Homebrew (kegs) version - Keyaku 2014\n"
-usage="usage: ./$0 ([OpenJailbreak Lib])" 
+usage="usage: $0 [help] ([OpenJailbreak Lib])\n" 
 unsufArgs="Not enough arguments."
 invalidArgs="Invalid arguments."
-conclusion="To uninstall a lib, execute the \"uninstall\" argument with brew, followed by \
-the lib name.\nHere's an example:\n \
-brew uninstall ${mainLibs[$(((RANDOM/1000)%10))]}"
+conclusion="\nTo uninstall a lib, execute the \"uninstall\" argument with brew, followed \
+by the lib name.\nHere's an example:\n\
+\tbrew uninstall ${mainLibs[$(((RANDOM/1000)%10))]}"
+
+# STATUS
+RET_success=0
+RET_error=1
+RET_invalid=2
+RET_help=3
+RET_exists=4
+RET_pingError=68
+noInternet=0
 
 
-# Functions
+# FUNCTIONS
+check_for_connect() {
+	ping -t 1 $pingableHost > /dev/null 2>&1
+	if [ $? -eq $RET_pingError ]; then
+		noInternet=1
+		echo -e "No internet connection found. Using local stuff.\n"
+	fi
+}
+
 check_args() {
 	# Checks for the available arguments, makes stuff out of them, returns the appropriate
 	#function to call
-	if [ $(echo $* | grep "help") ]; then
-		callMeUp="echo $usage"
-	elif [ $(echo ${mainLibs[@]} | grep $*) ]; then
-		libs=( $@ )
-		callMeUp="build_libs ${libs[@]}"
-	else
-		callMeUp="echo $invalidArgs"
-	fi
 	
-	return $callMeUp
+	if [ -n $(echo $* | grep "help") ]; then
+		return $RET_help
+	elif [ $(echo ${mainLibs[@]} | grep $*) ]; then
+		return RET_success
+	else
+		return $RET_invalid
+	fi
 }
 
 requirements() {
@@ -50,14 +66,20 @@ requirements() {
 	for i in "${requiredKegs[@]}"; do
 		if [ ! -e $cellar/$i ]; then brew install $i; fi
 	done
+	echo -e "All required packages are installed!\n"
+}
+
+# Packages management
+grab_package() {
+	if [ ! -d ./$keg ]; then
+		echo -e "Fetching $keg..."
+		git clone $libSrc/${keg}.git
+	else
+		echo -e "$keg already fetched (directory exists)."
+	fi
 }
 
 prep_package() {
-	# Grabbing the lib's name
-	kegName=$(echo $keg | sed 's/-.*//')
-	echo "Fetching $kegName..."
-	if [ ! -d ./$keg ]; then git clone $libSrc/${keg}.git; fi
-	cd $keg
 	# If configure.ac file exists, use the version that it provides (ugliest way but also the quickest)
 	if [ -e configure.ac ]; then
 		kegVersion=$(cat configure.ac | grep "AC_INIT" | cut -d',' -f2 | sed 's/ //' | sed 's/).*//')
@@ -66,10 +88,13 @@ prep_package() {
 	fi
 	# Setting the keg's place in the Cellar
 	kegDir=$cellar/$kegName/$kegVersion
-	# If the keg is up-to-date, skip it
+	# If the keg exists...
 	if [ -d $kegDir ]; then
-		echo -e "$(brew ls $kegName --versions) is already installed and updated. Skipping.\n"
-		continue
+		# If it is up-to-date, skip it
+		if [ $kegVersion != $(ls $cellar/$kegName/)  ]; then
+			echo -e "$(brew ls $kegName --versions) is already installed and updated. Skipping.\n"
+			return $RET_exists
+		fi
 	fi
 }
 
@@ -83,18 +108,31 @@ install_package() {
 	brew link $kegName
 }
 
+# Lib(s) building
 build_libs() {
-	for keg in "${libs[@]}"; do
-		# Prepare our package!
-		prep_package
-		# Install it!
-		install_package
+	check_for_connect
+	requirements
+	
+	for keg in ${libs[@]}; do
+		# Grabbing the lib's name
+		kegName=$(echo $keg | sed 's/-.*//')
+		
+		# Grab our package! (only if there's internet)
+		if [ $noInternet == 0 ]; then grab_package; fi
+		
+		if [ -d $keg ]; then
+			# Prepare our package!
+			cd $keg
+			prep_package
+			# INSTALL DAT SHIT (... only if it's not installed)
+			if [ $? != $RET_exists ]; then install_package; fi
+		fi
 		
 		# Prevents any (possible) mistake from OJ's scripts for doing "cd .." more/less than enough
 		cd $OJHome
 	done
 	
-	echo $conclusion
+	return $RET_success
 }
 
 
@@ -102,9 +140,9 @@ build_libs() {
 function main {
 	# First checks if the user has put too much gibberish as arguments
 	if [ $# -gt $(echo "${mainLibs[@]}" | wc -w) ]; then
-		echo $invalidArgs; echo $usage
+		echo -e $invalidArgs; echo -e $usage
 	fi
-	requirements
+	
 	case $# in
 		# No arguments == builds all available libraries
 		0)	libs=( ${mainLibs[@]} )
@@ -112,11 +150,25 @@ function main {
 			;;
 		# 1+ argument == runs check_args and whatever command is given by it
 		*)	check_args
-			$?	# Runs the "returned" command by check_args
+			case $? in
+				$RET_success)
+					libs=( $@ )
+					build_libs
+					;;
+				$RET_help)
+					echo -e $usage
+					;;
+				$RET_invalid) 
+				echo -e $invalidArgs; echo -e $usage
+					;;
+			
+			esac
 			;;
 	esac
+	
+	#echo -e $conclusion
 }
 
 # Script starts HERE
 echo -e $welcomeMsg
-main
+main $*

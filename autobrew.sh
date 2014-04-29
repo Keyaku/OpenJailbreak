@@ -54,7 +54,7 @@ check_args() {
 	if [ -n $(echo $* | grep "help") ]; then
 		return $RET_help
 	elif [ $(echo ${mainLibs[@]} | grep $*) ]; then
-		return RET_success
+		return $RET_success
 	else
 		return $RET_invalid
 	fi

@@ -32,7 +32,7 @@ brew uninstall ${mainLibs[$(((RANDOM/1000)%10))]}"
 check_args() {
 	# Checks for the available arguments, makes stuff out of them, returns the appropriate
 	#function to call
-	if [ $(echo $1 | grep "help") ]; then
+	if [ $(echo $* | grep "help") ]; then
 		callMeUp="echo $usage"
 	elif [ $(echo ${mainLibs[@]} | grep $*) ]; then
 		libs=( $@ )

@@ -19,7 +19,7 @@ libSrc="git://openjailbreak.org"
 pingableHost="google.com"
 
 # STRINGS
-welcomeMsg="OpenJailbreak library build script - DarkMalloc 2013\n\
+welcomeMsg="\nOpenJailbreak library build script - DarkMalloc 2013\n\
 Homebrew (kegs) version - Keyaku 2014\n"
 usage="usage: $0 [help] ([OpenJailbreak Lib])\n" 
 unsufArgs="Not enough arguments."
@@ -34,11 +34,13 @@ RET_error=1
 RET_invalid=2
 RET_help=3
 RET_exists=4
+RET_install=5
 RET_pingError=68
 noInternet=0
 
 
 # FUNCTIONS
+
 check_for_connect() {
 	ping -t 1 $pingableHost > /dev/null 2>&1
 	if [ $? -eq $RET_pingError ]; then
@@ -51,10 +53,10 @@ check_args() {
 	# Checks for the available arguments, makes stuff out of them, returns the appropriate
 	#function to call
 	
-	if [ -n $(echo $* | grep "help") ]; then
+	if [ "$(echo $* | grep help)" ]; then
 		return $RET_help
-	elif [ $(echo ${mainLibs[@]} | grep $*) ]; then
-		return $RET_success
+	elif [ "$(echo ${mainLibs[@]} | grep $1)" ]; then
+		return $RET_install
 	else
 		return $RET_invalid
 	fi
@@ -67,6 +69,14 @@ requirements() {
 		if [ ! -e $cellar/$i ]; then brew install $i; fi
 	done
 	echo -e "All required packages are installed!\n"
+}
+
+which_libs() {
+	for arg in $#; do
+		
+		lib_temp=$()
+		libs=( )
+	done
 }
 
 # Packages management
@@ -149,17 +159,17 @@ function main {
 			build_libs
 			;;
 		# 1+ argument == runs check_args and whatever command is given by it
-		*)	check_args
+		*)	check_args $*
 			case $? in
-				$RET_success)
-					libs=( $@ )
+				$RET_install)
+					which_libs $@
 					build_libs
 					;;
 				$RET_help)
 					echo -e $usage
 					;;
 				$RET_invalid) 
-				echo -e $invalidArgs; echo -e $usage
+					echo -e $invalidArgs; echo -e $usage
 					;;
 			
 			esac
@@ -172,3 +182,6 @@ function main {
 # Script starts HERE
 echo -e $welcomeMsg
 main $*
+
+#lib_temp=$(echo ${mainLibs[@]} | sed 's/.*'$1'.*/'$1'/')
+#echo $lib_temp

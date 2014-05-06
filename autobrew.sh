@@ -72,10 +72,10 @@ requirements() {
 }
 
 which_libs() {
-	for arg in $#; do
-		
-		lib_temp=$()
-		libs=( )
+	libs=""
+	for arg in $@; do
+		lib_temp=$(echo ${mainLibs[@]} | sed 's/.*'$arg'-[0-9].*/'$arg'-[0-9]/')
+		libs=$libs\ "$lib_temp"
 	done
 }
 
@@ -182,6 +182,3 @@ function main {
 # Script starts HERE
 echo -e $welcomeMsg
 main $*
-
-#lib_temp=$(echo ${mainLibs[@]} | sed 's/.*'$1'.*/'$1'/')
-#echo $lib_temp

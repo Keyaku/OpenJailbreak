@@ -74,7 +74,7 @@ requirements() {
 which_libs() {
 	libs=""
 	for arg in $@; do
-		lib_temp=$(echo ${mainLibs[@]} | sed 's/.*'$arg'-[0-9].*/'$arg'-[0-9]/')
+		lib_temp=$(echo ${mainLibs[@]} | sed 's/.*'$arg'/'$arg'/' | cut -d' ' -f1)
 		libs=$libs\ "$lib_temp"
 	done
 }

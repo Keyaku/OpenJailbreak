@@ -92,7 +92,7 @@ check_stuff() {
 	
 	# After that, checks if the user has put more arguments than available libraries
 	if [ $# -gt $(echo "${mainLibs[@]}" | wc -w) ]; then
-		echo -e "$invalidArgs \n$usage"
+		echo -e "$invalidArgs \n$usage"; exit $RET_invalid
 	fi
 }
 
@@ -103,18 +103,6 @@ requirements() {
 		if [ ! -e $cellar/$i -a $noInternet -eq 0 ]; then brew install $i; fi
 	done
 	echo -e "All required packages are installed!\n"
-}
-
-which_libs() {
-	libs=""
-	for arg in $@; do
-		if [ -z "$(echo ${mainLibs[@]} | grep $arg)" ]; then
-			echo -e "Library $arg doesn't exist. Ignoring this argument.\n"
-			continue
-		fi
-		lib_temp=$(echo ${mainLibs[@]} | sed 's/.*'$arg'/'$arg'/' | cut -d' ' -f1)
-		libs=$libs\ "$lib_temp"
-	done
 }
 
 # Packages management
@@ -180,10 +168,26 @@ build_libs() {
 	return $RET_success
 }
 
+which_libs() {
+	libs=""
+	for arg in $@; do
+		if [ -z "$(echo ${mainLibs[@]} | grep $arg)" ]; then
+			echo -e "Library $arg doesn't exist. Ignoring this argument.\n"
+			continue
+		fi
+		lib_temp=$(echo ${mainLibs[@]} | sed 's/.*'$arg'/'$arg'/' | cut -d' ' -f1)
+		libs=$libs\ "$lib_temp"
+	done
+	if [ ! $libs ]; then
+		echo -e "No valid libs found in arguments. Aborting.\n"
+		exit $RET_invalid
+	fi
+}
+
 
 # MAIN
 function main {
-	# Our main checking system. Checks for stuff.
+	# Our main checking system. Checks for stuff, and only once.
 	check_stuff $@
 	
 	# If we have one or more arguments, find out which are valid libs

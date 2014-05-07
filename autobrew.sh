@@ -21,8 +21,11 @@ pingableHost="google.com"
 # STRINGS
 welcomeMsg="\nOpenJailbreak library build script - DarkMalloc 2013\n\
 Homebrew (kegs) version - Keyaku 2014\n"
-usage="usage: $0 [help] ([OpenJailbreak Lib])\n" 
-unsufArgs="Not enough arguments."
+usage="usage: $0 [help] ([OpenJailbreak Lib])\n"
+installBrew="ruby -e \"\$(curl -fsSL https://raw.github.com/Homebrew/homebrew/go/install)\""
+noBrew="Homebrew is not installed.\nTo install it quickly, run this: \
+\n\n\t$installBrew \
+\n\nVisit http://brew.sh/ for more information."
 invalidArgs="Invalid arguments."
 conclusion="\nTo uninstall a lib, execute the \"uninstall\" argument with brew, followed \
 by the lib name.\nHere's an example:\n\
@@ -35,11 +38,26 @@ RET_invalid=2
 RET_help=3
 RET_exists=4
 RET_install=5
+RET_hasBrew=10
+RET_hasNoBrew=11
 RET_pingError=68
 noInternet=0
 
+# COLORS
+BGre='\e[1;32m';	# Bold Green
+
+
 
 # FUNCTIONS
+
+check_for_brew() {
+	# Checks for Homebrew
+	if [ ! -e /usr/local/bin/brew ]; then
+		return $RET_hasNoBrew
+	fi
+	
+	return $RET_hasBrew
+}
 
 check_for_connect() {
 	ping -t 1 $pingableHost > /dev/null 2>&1
@@ -109,12 +127,12 @@ prep_package() {
 }
 
 install_package() {
-	echo "Configuring $kegName..."
+	echo -e "Configuring $kegName..."
 	./autogen.sh > /dev/null		# Makes less visual garbage
 	./configure --prefix=$kegDir
-	echo "Building $kegName..."
+	echo -e "Building $kegName..."
 	make && make install
-	echo "Installing $kegName..."
+	echo -e "Installing $kegName..."
 	brew link $kegName
 }
 
@@ -123,7 +141,7 @@ build_libs() {
 	check_for_connect
 	requirements
 	
-	for keg in ${libs[@]}; do
+	for keg in ${libs[@]:-$(echo ${mainLibs[@]})}; do
 		# Grabbing the lib's name
 		kegName=$(echo $keg | sed 's/-.*//')
 		
@@ -148,15 +166,21 @@ build_libs() {
 
 # MAIN
 function main {
-	# First checks if the user has put too much gibberish as arguments
+	# First things first: check for Homebrew
+	check_for_brew
+	# If Homebrew isn't installed, why on Earth are you running this script, dawg?!
+	if [ $? -eq $RET_hasNoBrew ]; then
+		echo -e $noBrew; exit
+	fi
+	
+	# After that, checks if the user has put more arguments than available libraries
 	if [ $# -gt $(echo "${mainLibs[@]}" | wc -w) ]; then
 		echo -e $invalidArgs; echo -e $usage
 	fi
 	
 	case $# in
 		# No arguments == builds all available libraries
-		0)	libs=( ${mainLibs[@]} )
-			build_libs
+		0)	build_libs
 			;;
 		# 1+ argument == runs check_args and whatever command is given by it
 		*)	check_args $*

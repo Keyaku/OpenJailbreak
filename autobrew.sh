@@ -60,7 +60,7 @@ check_for_brew() {
 }
 
 check_for_connect() {
-	ping -t 1 $pingableHost > /dev/null 2>&1
+	ping -c1 $pingableHost > /dev/null 2>&1
 	if [ $? -eq $RET_pingError ]; then
 		noInternet=1
 		echo -e "No internet connection found. Using local stuff.\n"

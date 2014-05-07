@@ -1,7 +1,22 @@
 #!/bin/bash
-# DarkMalloc 22/09/2013 - sorry for hacked up shit, really tired and cba to do this properly atm
+# Original script by DarkMalloc - 22/09/2013
 # Edited by Keyaku to make installation happen in the Cellar (for Homebrew)
-# build script for OpenJailbreak (most libs)
+# Build script for OpenJailbreak (most libs)
+
+
+
+# COLORS
+RCol='\x1B[0m'					# Text Reset
+Red='\x1B[0;31m'				# Red, for small details
+Whi='\x1B[0;37m'				# White, for small details
+Yel='\x1B[0;33m'				# Yellow, for mid-building
+BGre='\x1B[1;32m'				# Bold Green, for successes
+BWhi='\x1B[1;37m'				# Bold White, when beginning something
+BRed='\x1B[1;31m'				# Bold Red, when an error occurred
+BYel='\x1B[1;33m'				# Bold Yellow, when building stuff
+UWhi='\x1B[4;37m'				# Underline White, for commands
+URed='\x1B[4;31m'				# Underline Red, for warnings
+UBlu='\x1B[4;34m'				# Underline Blue, for links
 
 
 # LIBRARIES
@@ -21,18 +36,36 @@ pingableHost="google.com"
 keyakuOJ="https://github.com/Keyaku/OpenJailbreak"
 
 # STRINGS
-welcomeMsg="\nOpenJailbreak library build script - DarkMalloc 2013\n\
-Homebrew (kegs) version - Keyaku 2014\n"
+Warn="${URed}Warning${Red}:${RCol}"
+
+Note="${UWhi}Notice${Whi}:${RCol}"
+
+Err="${BRed}Error:${RCol}"
+
+welcomeMsg="\n${BWhi}OpenJailbreak library build script - DarkMalloc 2013\n\
+Homebrew (kegs) version - Keyaku 2014${RCol}\n"
+
 usage="usage: $0 [help] [OpenJailbreak Lib(s)]\n"
+
+linkTrick="(CMD+Double Click)"
+
 installBrew="ruby -e \"\$(curl -fsSL https://raw.github.com/Homebrew/homebrew/go/install)\""
-noBrew="Homebrew is not installed.\nTo install it quickly (Xcode & CLT must be installed), run this: \
+
+noBrew="$Warn Homebrew is not installed.\nTo install it quickly (Xcode & CLT must be \
+installed), run this: \
 \n\n\t$installBrew \
-\n\nVisit http://brew.sh/ for more information."
-invalidArgs="Invalid arguments."
-failedInstall="\nThese libs failed to install: "
-conclusion="\nInstallation complete.\nTo uninstall a lib, execute the \"uninstall\" \
-argument with brew, followed by the lib name.\nHere's an example:\n\
-\tbrew uninstall ${mainLibs[$(((RANDOM/1000)%10))]} \n"
+\n\nVisit $linkTrick: ${UBlu}http://brew.sh/${RCol} for more information."
+
+invalidArgs="$Err Invalid arguments."
+
+failedInstall="\n$Warn These libs failed to install: "
+
+failedInstConfirm="Check what went wrong. If you can't do anything about it, file an issue \
+in my Github project page $linkTrick: \n\t${UBlu}$keyakuOJ${RCol}\n"
+
+conclusion="\n${BGre}Installation complete${RCol}.\nTo uninstall a lib, execute the \
+\"uninstall\" argument with brew, followed by the lib name.\nHere's an example:\n\
+---> \tbrew uninstall ${mainLibs[$(((RANDOM/1000)%10))]} \n"
 
 # STATUS
 RET_success=0
@@ -45,9 +78,6 @@ RET_hasBrew=10
 RET_hasNoBrew=11
 RET_pingError=68
 noInternet=0
-
-# COLORS
-BGre='\e[1;32m';	# Bold Green
 
 
 
@@ -66,7 +96,7 @@ check_for_connect() {
 	ping -c1 $pingableHost > /dev/null 2>&1
 	if [ $? -eq $RET_pingError ]; then
 		noInternet=1
-		echo -e "No internet connection found. Using local stuff.\n"
+		echo -e "$Warn No internet connection found. Using local stuff.\n"
 	fi
 }
 
@@ -131,25 +161,26 @@ prep_package() {
 	if [ -d $kegDir ]; then
 		# If it is up-to-date, skip it
 		if [ $kegVersion != $(ls $cellar/$kegName/)  ]; then
-			echo -e "$(brew ls $kegName --versions) is already installed and updated. Skipping.\n"
+			echo -e "$Note $(brew ls $kegName --versions) is already installed and updated. Skipping.\n"
 			return $RET_exists
 		fi
 	fi
 }
 
 install_package() {
-	echo -e "Configuring $kegName..."
+	echo -e "${BYel}Configuring $kegName...${Yel}"
 	./autogen.sh > /dev/null		# Makes less visual garbage
 	./configure --prefix=$kegDir
-	echo -e "Building $kegName..."
+	echo -e "${BYel}Building $kegName...${Yel}"
 	make && make install
 	# Let's check if the installation was successful
 	if [ -d $kegDir ]; then
-		echo -e "Installing $kegName..."
+		echo -e "${BYel}Installing $kegName...${Yel}"
 		brew link $kegName
 	else
 		failedLibs=$failedLibs\ "$kegName"
 	fi
+	echo -e "${RCol}"
 }
 
 # Lib(s) building
@@ -181,14 +212,14 @@ which_libs() {
 	libs=""
 	for arg in $@; do
 		if [ -z "$(echo ${mainLibs[@]} | grep $arg)" ]; then
-			echo -e "Library $arg doesn't exist. Ignoring this argument.\n"
+			echo -e "$Note Library $arg doesn't exist. Ignoring this argument.\n"
 			continue
 		fi
 		lib_temp=$(echo ${mainLibs[@]} | sed 's/.*'$arg'/'$arg'/' | cut -d' ' -f1)
 		libs=$libs\ "$lib_temp"
 	done
 	if [ ! "$libs" ]; then
-		echo -e "No valid libs found in arguments. Aborting.\n"
+		echo -e "$Warn No valid libs found in arguments. Aborting.\n"
 		exit $RET_invalid
 	fi
 }
@@ -208,8 +239,7 @@ function main {
 		for fail in ${failedLibs[@]}; do
 			echo -e "- $fail\n"
 		done
-		echo -e "Check what went wrong. If you can't do anything about it, file an issue \
-in my Github project page: \n\t$keyakuOJ\n"
+		echo -e $failedInstConfirm
 		exit $RET_error
 	else
 		echo -e $conclusion

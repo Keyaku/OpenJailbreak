@@ -21,9 +21,9 @@ pingableHost="google.com"
 # STRINGS
 welcomeMsg="\nOpenJailbreak library build script - DarkMalloc 2013\n\
 Homebrew (kegs) version - Keyaku 2014\n"
-usage="usage: $0 [help] ([OpenJailbreak Lib])\n"
+usage="usage: $0 [help] [OpenJailbreak Lib(s)]\n"
 installBrew="ruby -e \"\$(curl -fsSL https://raw.github.com/Homebrew/homebrew/go/install)\""
-noBrew="Homebrew is not installed.\nTo install it quickly, run this: \
+noBrew="Homebrew is not installed.\nTo install it quickly (Xcode & CLT must be installed), run this: \
 \n\n\t$installBrew \
 \n\nVisit http://brew.sh/ for more information."
 invalidArgs="Invalid arguments."
@@ -67,16 +67,32 @@ check_for_connect() {
 	fi
 }
 
-check_args() {
-	# Checks for the available arguments, makes stuff out of them, returns the appropriate
-	#function to call
+check_stuff() {
+	# Checks for required installs, connection to the internet, and many more
 	
+	# First things first: check if user has asked for help.
 	if [ "$(echo $* | grep help)" ]; then
-		return $RET_help
-	elif [ "$(echo ${mainLibs[@]} | grep $1)" ]; then
-		return $RET_install
-	else
-		return $RET_invalid
+		echo -e $usage; exit $RET_help
+	fi
+	
+	# If we are to download stuff: check for internet.
+	check_for_connect
+	
+	if [ $noInternet -eq 1 ]; then
+		# Then, check for Homebrew.
+		check_for_brew
+		# If Homebrew isn't installed, why on Earth are you running this script, dawg?!
+		if [ $? -eq $RET_hasNoBrew ]; then
+			echo -e $noBrew; exit $RET_hasNoBrew
+		fi
+	fi
+	
+	# Check for required kegs to be installed before digging into OJ libs installation
+	requirements
+	
+	# After that, checks if the user has put more arguments than available libraries
+	if [ $# -gt $(echo "${mainLibs[@]}" | wc -w) ]; then
+		echo -e "$invalidArgs \n$usage"
 	fi
 }
 
@@ -84,7 +100,7 @@ requirements() {
 	# Homebrew already provides a working libplist keg; we shall use it
 	echo "Checking if required packages are installed..."
 	for i in "${requiredKegs[@]}"; do
-		if [ ! -e $cellar/$i ]; then brew install $i; fi
+		if [ ! -e $cellar/$i -a $noInternet -eq 0 ]; then brew install $i; fi
 	done
 	echo -e "All required packages are installed!\n"
 }
@@ -92,6 +108,10 @@ requirements() {
 which_libs() {
 	libs=""
 	for arg in $@; do
+		if [ -z "$(echo ${mainLibs[@]} | grep $arg)" ]; then
+			echo -e "Library $arg doesn't exist. Ignoring this argument.\n"
+			continue
+		fi
 		lib_temp=$(echo ${mainLibs[@]} | sed 's/.*'$arg'/'$arg'/' | cut -d' ' -f1)
 		libs=$libs\ "$lib_temp"
 	done
@@ -138,9 +158,6 @@ install_package() {
 
 # Lib(s) building
 build_libs() {
-	check_for_connect
-	requirements
-	
 	for keg in ${libs[@]:-$(echo ${mainLibs[@]})}; do
 		# Grabbing the lib's name
 		kegName=$(echo $keg | sed 's/-.*//')
@@ -166,41 +183,14 @@ build_libs() {
 
 # MAIN
 function main {
-	# First things first: check for Homebrew
-	check_for_brew
-	# If Homebrew isn't installed, why on Earth are you running this script, dawg?!
-	if [ $? -eq $RET_hasNoBrew ]; then
-		echo -e $noBrew; exit
-	fi
+	# Our main checking system. Checks for stuff.
+	check_stuff $@
 	
-	# After that, checks if the user has put more arguments than available libraries
-	if [ $# -gt $(echo "${mainLibs[@]}" | wc -w) ]; then
-		echo -e $invalidArgs; echo -e $usage
-	fi
+	# If we have one or more arguments, find out which are valid libs
+	if [ $# -gt 0 ]; then which_libs $@; fi
+	build_libs
 	
-	case $# in
-		# No arguments == builds all available libraries
-		0)	build_libs
-			;;
-		# 1+ argument == runs check_args and whatever command is given by it
-		*)	check_args $*
-			case $? in
-				$RET_install)
-					which_libs $@
-					build_libs
-					;;
-				$RET_help)
-					echo -e $usage
-					;;
-				$RET_invalid) 
-					echo -e $invalidArgs; echo -e $usage
-					;;
-			
-			esac
-			;;
-	esac
-	
-	#echo -e $conclusion
+	return $RET_succes
 }
 
 # Script starts HERE

@@ -187,7 +187,7 @@ which_libs() {
 		lib_temp=$(echo ${mainLibs[@]} | sed 's/.*'$arg'/'$arg'/' | cut -d' ' -f1)
 		libs=$libs\ "$lib_temp"
 	done
-	if [ ! $libs ]; then
+	if [ ! "$libs" ]; then
 		echo -e "No valid libs found in arguments. Aborting.\n"
 		exit $RET_invalid
 	fi

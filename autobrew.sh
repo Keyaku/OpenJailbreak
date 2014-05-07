@@ -9,6 +9,7 @@ requiredKegs=( "openssl" "libtool" "zlib" "libplist" )
 mainLibs=( "libusbmuxd-1" "libimobiledevice-1" "libcrippy-1" "libmacho-1" \
 	"libdyldcache-1" "libimg3-1" "libirecovery-2" "libmbdb-1" "libpartialzip-1" \
 	"libtss-1" "libipsw-1" "libidevicebackup-1-0" "libidevicecrashreport-1" "libsyringe-1" )
+failedLibs=""
 
 # PATHS
 cellar=/usr/local/Cellar
@@ -17,6 +18,7 @@ OJHome=$(pwd)
 # LINKS
 libSrc="git://openjailbreak.org"
 pingableHost="google.com"
+keyakuOJ="https://github.com/Keyaku/OpenJailbreak"
 
 # STRINGS
 welcomeMsg="\nOpenJailbreak library build script - DarkMalloc 2013\n\
@@ -27,9 +29,10 @@ noBrew="Homebrew is not installed.\nTo install it quickly (Xcode & CLT must be i
 \n\n\t$installBrew \
 \n\nVisit http://brew.sh/ for more information."
 invalidArgs="Invalid arguments."
-conclusion="\nTo uninstall a lib, execute the \"uninstall\" argument with brew, followed \
-by the lib name.\nHere's an example:\n\
-\tbrew uninstall ${mainLibs[$(((RANDOM/1000)%10))]}"
+failedInstall="\nThese libs failed to install: "
+conclusion="\nInstallation complete.\nTo uninstall a lib, execute the \"uninstall\" \
+argument with brew, followed by the lib name.\nHere's an example:\n\
+\tbrew uninstall ${mainLibs[$(((RANDOM/1000)%10))]} \n"
 
 # STATUS
 RET_success=0
@@ -140,8 +143,13 @@ install_package() {
 	./configure --prefix=$kegDir
 	echo -e "Building $kegName..."
 	make && make install
-	echo -e "Installing $kegName..."
-	brew link $kegName
+	# Let's check if the installation was successful
+	if [ -d $kegDir ]; then
+		echo -e "Installing $kegName..."
+		brew link $kegName
+	else
+		failedLibs=$failedLibs\ "$kegName"
+	fi
 }
 
 # Lib(s) building
@@ -165,7 +173,8 @@ build_libs() {
 		cd $OJHome
 	done
 	
-	return $RET_success
+	if [ -z $failedLibs ]; then return $RET_success
+	else return $RET_error; fi
 }
 
 which_libs() {
@@ -194,7 +203,18 @@ function main {
 	if [ $# -gt 0 ]; then which_libs $@; fi
 	build_libs
 	
-	return $RET_succes
+	if [ $? -eq $RET_error ]; then
+		echo -e $failedInstall
+		for fail in ${failedLibs[@]}; do
+			echo -e "- $fail\n"
+		done
+		echo -e "Check what went wrong. If you can't do anything about it, file an issue \
+in my Github project page: \n\t$keyakuOJ\n"
+		exit $RET_error
+	else
+		echo -e $conclusion
+		exit $RET_succes
+	fi
 }
 
 # Script starts HERE

@@ -20,10 +20,13 @@ UBlu='\x1B[4;34m'				# Underline Blue, for links
 
 
 # LIBRARIES
-requiredKegs=( "openssl" "libtool" "zlib" "libplist" )
-mainLibs=( "libusbmuxd-1" "libimobiledevice-1" "libcrippy-1" "libmacho-1" \
-	"libdyldcache-1" "libimg3-1" "libirecovery-2" "libmbdb-1" "libpartialzip-1" \
-	"libtss-1" "libipsw-1" "libidevicebackup-1-0" "libidevicecrashreport-1" "libsyringe-1" )
+requiredKegs=( "openssl" "libtool" "zlib" "libplist" "usbmuxd" "libimobiledevice" )
+
+mainLibs=( "libcrippy-1" "libmacho-1" "libdyldcache-1" "libimg3-1" "libimg4-1" \
+"libirecovery-2" "libmbdb-1" "libpartialzip-1" "libtss-1" "libipsw-1" \
+"libidevicebackup-1-0" "libidevicecrashreport-1" "libsyringe-1" "libidevicecrashreport-1" \
+"libdyldcache-1" "libcnary-1" "heapsim-1" )
+
 failedLibs=""
 
 # PATHS
@@ -31,9 +34,12 @@ cellar=/usr/local/Cellar
 OJHome=$(pwd)
 
 # LINKS
-libSrc="git://openjailbreak.org"
+gitKeyaku="https://github.com/Keyaku"
+keyakuOJ="$gitKeyaku/OpenJailbreak"
+libSrcOJ="git://openjailbreak.org"
 pingableHost="google.com"
-keyakuOJ="https://github.com/Keyaku/OpenJailbreak"
+brewWeb="http://brew.sh/"
+brewWebInstall="https://raw.github.com/Homebrew/homebrew/go/install"
 
 # STRINGS
 Warn="${URed}Warning${Red}:${RCol}"
@@ -49,19 +55,20 @@ usage="usage: $0 [help] [OpenJailbreak Lib(s)]\n"
 
 linkTrick="(CMD+Double Click)"
 
-installBrew="ruby -e \"\$(curl -fsSL https://raw.github.com/Homebrew/homebrew/go/install)\""
+installBrew="ruby -e \"\$(curl -fsSL $brewWebInstall)\""
 
 noBrew="$Warn Homebrew is not installed.\nTo install it quickly (Xcode & CLT must be \
 installed), run this: \
 \n\n\t$installBrew \
-\n\nVisit $linkTrick: ${UBlu}http://brew.sh/${RCol} for more information."
+\n\nVisit $linkTrick: ${UBlu}$brewWeb${RCol} for more information."
 
 invalidArgs="$Err Invalid arguments."
 
 failedInstall="\n$Warn These libs failed to install: "
 
-failedInstConfirm="Check what went wrong. If you can't do anything about it, file an issue \
-in my Github project page $linkTrick: \n\t${UBlu}$keyakuOJ${RCol}\n"
+failedInstConfirm="Check what went wrong. If you can't do anything about it, wait for a \
+fix or, if necessary, file an issue in my Github project page $linkTrick: \
+\n\t${UBlu}$keyakuOJ${RCol}\n"
 
 conclusion="\n${BGre}Installation complete${RCol}.\nTo uninstall a lib, execute the \
 \"uninstall\" argument with brew, followed by the lib name.\nHere's an example:\n\
@@ -142,7 +149,7 @@ requirements() {
 grab_package() {
 	if [ ! -d ./$keg ]; then
 		echo -e "Fetching $keg..."
-		git clone $libSrc/${keg}.git
+		git clone $libSrcOJ/${keg}.git
 	else
 		echo -e "$keg already fetched (directory exists)."
 	fi
@@ -204,7 +211,7 @@ build_libs() {
 		cd $OJHome
 	done
 	
-	if [ -z $failedLibs ]; then return $RET_success
+	if [ -z "$failedLibs" ]; then return $RET_success
 	else return $RET_error; fi
 }
 

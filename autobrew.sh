@@ -38,7 +38,7 @@ gitKeyaku="https://github.com/Keyaku"
 keyakuOJ="$gitKeyaku/OpenJailbreak"
 libSrcOJ="git://openjailbreak.org"
 pingableHost="google.com"
-brewWeb="http://brew.sh/"
+brewWeb="http://brew.sh"
 brewWebInstall="https://raw.github.com/Homebrew/homebrew/go/install"
 
 # STRINGS
@@ -61,6 +61,10 @@ noBrew="$Warn Homebrew is not installed.\nTo install it quickly (Xcode & CLT mus
 installed), run this: \
 \n\n\t$installBrew \
 \n\nVisit $linkTrick: ${UBlu}$brewWeb${RCol} for more information."
+
+chkReqKegs="Checking if required packages are installed..."
+
+reqKegsSuccess="All required packages are installed!\n"
 
 invalidArgs="$Err Invalid arguments."
 
@@ -137,12 +141,12 @@ check_stuff() {
 }
 
 requirements() {
-	# Homebrew already provides a working libplist keg; we shall use it
-	echo "Checking if required packages are installed..."
+	# Homebrew already provides stable kegs needed for OpenJailbreak; we shall use them
+	echo -e $chkReqKegs
 	for i in "${requiredKegs[@]}"; do
 		if [ ! -e $cellar/$i -a $noInternet -eq 0 ]; then brew install $i; fi
 	done
-	echo -e "All required packages are installed!\n"
+	echo -e $reqKegsSucess
 }
 
 # Packages management

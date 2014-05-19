@@ -66,7 +66,9 @@ chkReqKegs="Checking if required packages are installed..."
 
 reqKegsSuccess="All required packages are installed!\n"
 
-invalidArgs="$Err Invalid arguments."
+noConnectFound="$Warn No internet connection found. Using local stuff.\n"
+
+invalidArgs="$Warn No valid libs found in arguments. Aborting.\n$usage"
 
 failedInstall="\n$Warn These libs failed to install: "
 
@@ -107,7 +109,7 @@ check_for_connect() {
 	ping -c1 $pingableHost > /dev/null 2>&1
 	if [ $? -eq $RET_pingError ]; then
 		noInternet=1
-		echo -e "$Warn No internet connection found. Using local stuff.\n"
+		echo -e $noConnectFound
 	fi
 }
 
@@ -133,11 +135,6 @@ check_stuff() {
 	
 	# Check for required kegs to be installed before digging into OJ libs installation
 	requirements
-	
-	# After that, checks if the user has put more arguments than available libraries
-	if [ $# -gt $(echo "${mainLibs[@]}" | wc -w) ]; then
-		echo -e "$invalidArgs \n$usage"; exit $RET_invalid
-	fi
 }
 
 requirements() {
@@ -230,7 +227,7 @@ which_libs() {
 		libs=$libs\ "$lib_temp"
 	done
 	if [ ! "$libs" ]; then
-		echo -e "$Warn No valid libs found in arguments. Aborting.\n"
+		echo -e $invalidArgs
 		exit $RET_invalid
 	fi
 }

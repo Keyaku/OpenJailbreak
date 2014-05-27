@@ -6,17 +6,17 @@
 
 
 # COLORS
-RCol='\x1B[0m'					# Text Reset
-Red='\x1B[0;31m'				# Red, for small details
-Whi='\x1B[0;37m'				# White, for small details
-Yel='\x1B[0;33m'				# Yellow, for mid-building
-BGre='\x1B[1;32m'				# Bold Green, for successes
-BWhi='\x1B[1;37m'				# Bold White, when beginning something
-BRed='\x1B[1;31m'				# Bold Red, when an error occurred
-BYel='\x1B[1;33m'				# Bold Yellow, when building stuff
-UWhi='\x1B[4;37m'				# Underline White, for commands
-URed='\x1B[4;31m'				# Underline Red, for warnings
-UBlu='\x1B[4;34m'				# Underline Blue, for links
+RCol='\033[0m'					# Text Reset
+Red='\033[0;31m'				# Red, for small details
+Whi='\033[0;37m'				# White, for small details
+Yel='\033[0;33m'				# Yellow, for mid-building
+BGre='\033[1;32m'				# Bold Green, for successes
+BWhi='\033[1;37m'				# Bold White, when beginning something
+BRed='\033[1;31m'				# Bold Red, when an error occurred
+BYel='\033[1;33m'				# Bold Yellow, when building stuff
+UWhi='\033[4;37m'				# Underline White, for commands
+URed='\033[4;31m'				# Underline Red, for warnings
+UBlu='\033[4;34m'				# Underline Blue, for links
 
 
 # LIBRARIES
@@ -53,7 +53,7 @@ Homebrew (kegs) version - Keyaku 2014${RCol}\n"
 
 usage="usage: $0 [help] [OpenJailbreak Lib(s)]\n"
 
-linkTrick="(CMD+Double Click)"
+linkTrick="(CMD+Double Click the following link)"
 
 installBrew="ruby -e \"\$(curl -fsSL $brewWebInstall)\""
 

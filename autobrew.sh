@@ -46,7 +46,7 @@ Warn="${URed}Warning${Red}:${RCol}"
 
 Note="${UWhi}Notice${Whi}:${RCol}"
 
-Err="${BRed}Error:${RCol}"
+Err="${BRed}Error${Red}:${RCol}"
 
 welcomeMsg="\n${BWhi}OpenJailbreak library build script - DarkMalloc 2013\n\
 Homebrew (kegs) version - Keyaku 2014${RCol}\n"

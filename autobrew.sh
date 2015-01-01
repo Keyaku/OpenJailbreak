@@ -27,11 +27,11 @@ mainLibs=( "libcrippy-1" "libmacho-1" "libdyldcache-1" "libimg3-1" "libimg4-1" \
 "libidevicebackup-1-0" "libidevicecrashreport-1" "libsyringe-1" "libidevicecrashreport-1" \
 "libdyldcache-1" "libcnary-1" "heapsim-1" )
 
-failedLibs=""
 
 # PATHS
 cellar=/usr/local/Cellar
 OJHome=$(pwd)
+
 
 # LINKS
 gitKeyaku="https://github.com/Keyaku"
@@ -40,6 +40,7 @@ libSrcOJ="git://openjailbreak.org"
 pingableHost="google.com"
 brewWeb="http://brew.sh"
 brewWebInstall="https://raw.github.com/Homebrew/homebrew/go/install"
+
 
 # STRINGS
 Warn="${URed}Warning${Red}:${RCol}"
@@ -74,6 +75,7 @@ conclusion="\n${BGre}Installation complete${RCol}.\nTo uninstall a lib, execute 
 \"uninstall\" argument with brew, followed by the lib name.\nHere's an example:\n\
 ---> \tbrew uninstall ${mainLibs[$(((RANDOM/1000)%10))]} \n"
 
+
 # STATUS
 RET_success=0
 RET_error=1
@@ -84,6 +86,10 @@ RET_install=5
 RET_hasBrew=10
 RET_hasNoBrew=11
 RET_pingError=68
+
+
+# VARIABLES
+failedLibs=""
 noInternet=0
 
 

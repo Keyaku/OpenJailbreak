@@ -48,23 +48,17 @@ Note="${UWhi}Notice${Whi}:${RCol}"
 
 Err="${BRed}Error${Red}:${RCol}"
 
-welcomeMsg="\n${BWhi}OpenJailbreak library build script - DarkMalloc 2013\n\
-Homebrew (kegs) version - Keyaku 2014${RCol}\n"
 
 usage="usage: $0 [help] [OpenJailbreak Lib(s)]\n"
 
 linkTrick="(CMD+Double Click the following link)"
 
-installBrew="ruby -e \"\$(curl -fsSL $brewWebInstall)\""
-
 noBrew="$Warn Homebrew is not installed.\nTo install it quickly (Xcode & CLT must be \
 installed), run this: \
-\n\n\t$installBrew \
+\n\n\truby -e \"\$(curl -fsSL $brewWebInstall)\" \
 \n\nVisit $linkTrick: ${UBlu}$brewWeb${RCol} for more information."
 
-chkReqKegs="Checking if required packages are installed..."
-
-reqKegsSuccess="All required packages are installed!\n"
+#reqKegsSuccess="All required packages are installed!\n"
 
 noConnectFound="$Warn No internet connection found. Using local stuff.\n"
 
@@ -72,7 +66,7 @@ invalidArgs="$Warn No valid libs found in arguments. Aborting.\n$usage"
 
 failedInstall="\n$Warn These libs failed to install: "
 
-failedInstConfirm="Check what went wrong. If you can't do anything about it, wait for a \
+failedInstallConfirm="Check what went wrong. If you can't do anything about it, wait for a \
 fix or, if necessary, file an issue in my Github project page $linkTrick: \
 \n\t${UBlu}$keyakuOJ${RCol}\n"
 
@@ -101,7 +95,7 @@ check_for_brew() {
 	if [ ! -e /usr/local/bin/brew ]; then
 		return $RET_hasNoBrew
 	fi
-	
+
 	return $RET_hasBrew
 }
 
@@ -115,15 +109,15 @@ check_for_connect() {
 
 check_stuff() {
 	# Checks for required installs, connection to the internet, and many more
-	
+
 	# First things first: check if user has asked for help.
 	if [ "$(echo $* | grep help)" ]; then
 		echo -e $usage; exit $RET_help
 	fi
-	
+
 	# If we are to download stuff: check for internet.
 	check_for_connect
-	
+
 	if [ $noInternet -eq 1 ]; then
 		# Then, check for Homebrew.
 		check_for_brew
@@ -132,14 +126,14 @@ check_stuff() {
 			echo -e $noBrew; exit $RET_hasNoBrew
 		fi
 	fi
-	
+
 	# Check for required kegs to be installed before digging into OJ libs installation
 	requirements
 }
 
 requirements() {
 	# Homebrew already provides stable kegs needed for OpenJailbreak; we shall use them
-	echo -e $chkReqKegs
+	echo -e "Checking if required packages are installed..."
 	for i in "${requiredKegs[@]}"; do
 		if [ ! -e $cellar/$i -a $noInternet -eq 0 ]; then brew install $i; fi
 	done
@@ -196,10 +190,10 @@ build_libs() {
 	for keg in ${libs[@]:-$(echo ${mainLibs[@]})}; do
 		# Grabbing the lib's name
 		kegName=$(echo $keg | sed 's/-.*//')
-		
+
 		# Grab our package! (only if there's internet)
 		if [ $noInternet == 0 ]; then grab_package; fi
-		
+
 		if [ -d $keg ]; then
 			# Prepare our package!
 			cd $keg
@@ -207,11 +201,11 @@ build_libs() {
 			# INSTALL DAT SHIT (... only if it's not installed)
 			if [ $? != $RET_exists ]; then install_package; fi
 		fi
-		
+
 		# Prevents any (possible) mistake from OJ's scripts for doing "cd .." more/less than enough
 		cd $OJHome
 	done
-	
+
 	if [ -z "$failedLibs" ]; then return $RET_success
 	else return $RET_error; fi
 }
@@ -237,17 +231,17 @@ which_libs() {
 function main {
 	# Our main checking system. Checks for stuff, and only once.
 	check_stuff $@
-	
+
 	# If we have one or more arguments, find out which are valid libs
 	if [ $# -gt 0 ]; then which_libs $@; fi
 	build_libs
-	
+
 	if [ $? -eq $RET_error ]; then
 		echo -e $failedInstall
 		for fail in ${failedLibs[@]}; do
 			echo -e "- $fail\n"
 		done
-		echo -e $failedInstConfirm
+		echo -e $failedInstallConfirm
 		exit $RET_error
 	else
 		echo -e $conclusion
@@ -256,5 +250,6 @@ function main {
 }
 
 # Script starts HERE
-echo -e $welcomeMsg
+echo -e "\n${BWhi}OpenJailbreak library build script - DarkMalloc 2013\n\
+Homebrew (kegs) version - Keyaku 2014${RCol}\n"
 main $*

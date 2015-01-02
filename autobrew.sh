@@ -19,14 +19,42 @@ URed='\033[4;31m'				# Underline Red, for warnings
 UBlu='\033[4;34m'				# Underline Blue, for links
 
 
-# LIBRARIES
+# ----------------- LIBS, HERE WE GO -----------------
+
+# AVAILABLE KEGS
 requiredKegs=( "openssl" "libtool" "zlib" "libplist" "usbmuxd" "libimobiledevice" )
 
-mainLibs=( "libcrippy-1" "libmacho-1" "libdyldcache-1" "libimg3-1" "libimg4-1" \
-"libirecovery-2" "libmbdb-1" "libpartialzip-1" "libtss-1" "libipsw-1" \
-"libidevicebackup-1-0" "libidevicecrashreport-1" "libsyringe-1" "libidevicecrashreport-1" \
-"libdyldcache-1" "libcnary-1" "heapsim-1" )
 
+# SUB-LIBRARIES
+# -- libabsinthe --
+libabsintheSubs=( "libcrippy-1" "libdyldcache-1" "libmacho-1" "libmbdb-1" )
+
+# -- libimobiledevice --
+libidevicerestoreSubs=( "idevicerestore-1" "libimg3-1" "libimg4-1" "libipsw-1" "libtss-1" )
+
+libimobiledeviceSubs=( "libcnary-1" "libidevicebackup-1-0" "libidevicecrashreport-1" \
+${libidevicerestoreSubs[@]} )
+
+# -- libpois0n --
+libanthraxSubs=( "libhfsplus-1" )
+libarsenicSubs=( "libdmg-1" )
+
+libpoisonSubs=( ${libanthraxSubs[@]} ${libarsenicSubs[@]} \
+"libirecovery-2" "libpartialzip-1" "libsyringe-1" )
+
+# -- libqmi --
+# These are mostly Xcode projects
+#libqmiSubs=( "bbtool" "dbltool" "dloadtool" "iosusbenum" )
+
+
+# LIBRARIES
+mainLibs=( ${libabsintheSubs[@]} \
+"libimobiledevice-1" ${libimobiledeviceSubs[@]} \
+"libpois0n-1" ${libpoisonSubs[@]} \
+#"libqmi-1" ${libqmiSubs[@]}
+)
+
+# ----------------- END OF LIBS -----------------
 
 # PATHS
 cellar=/usr/local/Cellar
@@ -256,6 +284,8 @@ function main {
 }
 
 # Script starts HERE
-echo -e "\n${BWhi}OpenJailbreak library build script - DarkMalloc 2013\n\
-Homebrew (kegs) version - Keyaku 2014${RCol}\n"
+clear
+
+echo -e "${BWhi}OpenJailbreak library build script - DarkMalloc 2013\n\
+Homebrew (kegs) version - Keyaku 2015${RCol}\n"
 main $*

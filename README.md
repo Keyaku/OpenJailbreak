@@ -1,6 +1,6 @@
 <h1>Brew script for OpenJailbreak</h1>
-Website: https://www.openjailbreak.org/
-Twitter: [@OpenJailbreak](https://twitter.com/OpenJailbreak)
+Website: https://www.openjailbreak.org/  
+Twitter: [@OpenJailbreak](https://twitter.com/OpenJailbreak)  
 IRC: chat.freenode.net, #OpenJailbreak
 
 A (Home)brew installation script (Mac OS X only).

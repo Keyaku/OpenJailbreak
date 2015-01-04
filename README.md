@@ -10,8 +10,8 @@ A (Home)brew installation script (Mac OS X only).
 1- Pick your workspace folder in Terminal (using ``cd``)
 
 2- Run the following commands:  
-<code>**git clone https://github.com/Keyaku/OpenJailbreak.git**</code>
-<code>**cd OpenJailbreak**</code>
+<code>**git clone https://github.com/Keyaku/OpenJailbreak.git**</code>  
+<code>**cd OpenJailbreak**</code>  
 <code>**./autobrew.sh**</code>
 
 =======================

@@ -40,7 +40,8 @@ libanthraxSubs=( "libhfsplus-1" )
 libarsenicSubs=( "libdmg-1" )
 
 libpoisonSubs=( ${libanthraxSubs[@]} ${libarsenicSubs[@]} \
-"libirecovery-2" "libpartialzip-1" "libsyringe-1" )
+"libirecovery-2" "libpartialzip-1" "libsyringe-1"
+)
 
 # -- libqmi --
 # These are mostly Xcode projects
@@ -48,10 +49,10 @@ libpoisonSubs=( ${libanthraxSubs[@]} ${libarsenicSubs[@]} \
 
 
 # LIBRARIES
-mainLibs=( ${libabsintheSubs[@]} \
+mainLibs=( #${libabsintheSubs[@]} \
 "libimobiledevice-1" ${libimobiledeviceSubs[@]} \
 "libpois0n-1" ${libpoisonSubs[@]} \
-#"libqmi-1" ${libqmiSubs[@]}
+"libqmi-1" ${libqmiSubs[@]}
 )
 
 # ----------------- END OF LIBS -----------------
@@ -78,28 +79,26 @@ Note="${UWhi}Notice${Whi}:${RCol}"
 Err="${BRed}Error${Red}:${RCol}"
 
 
-usage="usage: $0 [help] [OpenJailbreak Lib(s)]\n"
+STR_usage="usage: $0 [help] [OpenJailbreak Lib(s)]\n"
 
-linkTrick="(CMD+Double Click the following link)"
+STR_linkTrick="(CMD+Double Click the following link)"
 
-noBrew="$Warn Homebrew is not installed.\nTo install it quickly (Xcode & CLT must be \
+STR_noBrew="$Warn Homebrew is not installed.\nTo install it quickly (Xcode & CLT must be \
 installed), run this: \
 \n\n\truby -e \"\$(curl -fsSL $brewWebInstall)\" \
-\n\nVisit $linkTrick: ${UBlu}$brewWeb${RCol} for more information."
+\n\nVisit $STR_linkTrick: ${UBlu}$brewWeb${RCol} for more information."
 
-#reqKegsSuccess="All required packages are installed!\n"
+STR_noConnectFound="$Warn No internet connection found. Using local stuff.\n"
 
-noConnectFound="$Warn No internet connection found. Using local stuff.\n"
+STR_invalidArgs="$Warn No valid libs found in arguments. Aborting.\n$STR_usage"
 
-invalidArgs="$Warn No valid libs found in arguments. Aborting.\n$usage"
+STR_failedInstall="\n$Warn Problems occurred while..."
 
-failedInstall="\n$Warn These libs failed to install: "
-
-failedInstallConfirm="Check what went wrong. If you can't do anything about it, wait for a \
-fix or, if necessary, file an issue in my Github project page $linkTrick: \
+STR_failedInstallConfirm="Check what went wrong. If necessary, file an issue in \
+my Github project page $STR_linkTrick: \
 \n\t${UBlu}$keyakuOJ${RCol}\n"
 
-conclusion="\n${BGre}Installation complete${RCol}.\nTo uninstall a lib, execute the \
+STR_conclusion="\n${BGre}Installation complete${RCol}.\nTo uninstall a lib, execute the \
 \"uninstall\" argument with brew, followed by the lib name.\nHere's an example:\n\
 ---> \tbrew uninstall ${mainLibs[$(((RANDOM/1000)%10))]} \n"
 
@@ -117,7 +116,7 @@ RET_pingError=68
 
 
 # VARIABLES
-failedLibs=""
+failedLibs=()
 noInternet=0
 
 
@@ -137,7 +136,7 @@ check_for_connect() {
 	ping -c1 $pingableHost > /dev/null 2>&1
 	if [ $? -eq $RET_pingError ]; then
 		noInternet=1
-		echo -e $noConnectFound
+		echo -e $STR_noConnectFound
 	fi
 }
 
@@ -146,7 +145,7 @@ check_stuff() {
 
 	# First things first: check if user has asked for help.
 	if [ "$(echo $* | grep help)" ]; then
-		echo -e $usage; exit $RET_help
+		echo -e $STR_usage; exit $RET_help
 	fi
 
 	# If we are to download stuff: check for internet.
@@ -157,7 +156,7 @@ check_stuff() {
 		check_for_brew
 		# If Homebrew isn't installed, why on Earth are you running this script, dawg?!
 		if [ $? -eq $RET_hasNoBrew ]; then
-			echo -e $noBrew; exit $RET_hasNoBrew
+			echo -e $STR_noBrew; exit $RET_hasNoBrew
 		fi
 	fi
 
@@ -171,14 +170,20 @@ requirements() {
 	for i in "${requiredKegs[@]}"; do
 		if [ ! -e $cellar/$i -a $noInternet -eq 0 ]; then brew install $i; fi
 	done
-	echo -e $reqKegsSucess
+	echo -e "All required packages are installed!\n"
 }
 
 # Packages management
 grab_package() {
 	if [ ! -d ./$keg ]; then
-		echo -e "Fetching $keg..."
+		currentlyDoing="Fetching $kegName"
+		echo -e "$currentlyDoing..."
+
 		git clone $libSrcOJ/${keg}.git
+		if [ $? -ne $RET_success ]; then
+			add_failed_lib $currentlyDoing
+		fi
+		echo
 	else
 		echo -e "$keg already fetched (directory exists)."
 	fi
@@ -204,19 +209,31 @@ prep_package() {
 }
 
 install_package() {
-	echo -e "${BYel}Configuring $kegName...${Yel}"
+	currentlyDoing="Configuring $kegName"
+	echo -e "${BYel}$currentlyDoing...${Yel}"
 	./autogen.sh > /dev/null		# Makes less visual garbage
 	./configure --prefix=$kegDir
-	echo -e "${BYel}Building $kegName...${Yel}"
+
+	currentlyDoing="Building $kegName"
+	echo -e "${BYel}$currentlyDoing...${Yel}"
 	make && make install
+
 	# Let's check if the installation was successful
 	if [ -d $kegDir ]; then
-		echo -e "${BYel}Installing $kegName...${Yel}"
+		currentlyDoing="Installing $kegName"
+		echo -e "${BYel}$currentlyDoing...${Yel}"
 		brew link $kegName
 	else
-		failedLibs=$failedLibs\ "$kegName"
+		add_failed_lib $currentlyDoing
 	fi
 	echo -e "${RCol}"
+}
+
+add_failed_lib() {
+	# Receives 2 arguments:
+	#	$1 - What failed
+	#	$2 - lib/keg name
+	failedLibs+=("$1 $2")
 }
 
 # Lib(s) building
@@ -241,7 +258,8 @@ build_libs() {
 	done
 
 	if [ -z "$failedLibs" ]; then return $RET_success
-	else return $RET_error; fi
+	else return $RET_error
+	fi
 }
 
 which_libs() {
@@ -255,7 +273,7 @@ which_libs() {
 		libs=$libs\ "$lib_temp"
 	done
 	if [ ! "$libs" ]; then
-		echo -e $invalidArgs
+		echo -e $STR_invalidArgs
 		exit $RET_invalid
 	fi
 }
@@ -271,14 +289,14 @@ function main {
 	build_libs
 
 	if [ $? -eq $RET_error ]; then
-		echo -e $failedInstall
-		for fail in ${failedLibs[@]}; do
-			echo -e "- $fail\n"
+		echo -e $STR_failedInstall
+		for i in $(seq 0 `expr ${#failedLibs[@]} - 1`); do
+			echo -e "- ${failedLibs[i]}\n"
 		done
-		echo -e $failedInstallConfirm
+		echo -e $STR_failedInstallConfirm
 		exit $RET_error
 	else
-		echo -e $conclusion
+		echo -e $STR_conclusion
 		exit $RET_succes
 	fi
 }

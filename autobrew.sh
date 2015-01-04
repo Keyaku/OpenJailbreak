@@ -49,10 +49,10 @@ libpoisonSubs=( ${libanthraxSubs[@]} ${libarsenicSubs[@]} \
 
 
 # LIBRARIES
-mainLibs=( #${libabsintheSubs[@]} \
+mainLibs=( ${libabsintheSubs[@]} \
 "libimobiledevice-1" ${libimobiledeviceSubs[@]} \
 "libpois0n-1" ${libpoisonSubs[@]} \
-"libqmi-1" ${libqmiSubs[@]}
+#"libqmi-1" ${libqmiSubs[@]}
 )
 
 # ----------------- END OF LIBS -----------------
@@ -297,7 +297,7 @@ function main {
 		exit $RET_error
 	else
 		echo -e $STR_conclusion
-		exit $RET_succes
+		exit $RET_success
 	fi
 }
 

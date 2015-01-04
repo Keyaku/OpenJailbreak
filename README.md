@@ -1,32 +1,27 @@
-<p>An unofficial Git to bump Joshua Hill's (a.k.a. p0sixninja) OpenJailbreak project.<br>
-Website: https://www.openjailbreak.org<br>
-Twitter: @OpenJailbreak<br>
-IRC: chat.freenode.net, #OpenJailbreak</p>
+<h1>Brew script for OpenJailbreak</h1>
+Website: https://www.openjailbreak.org/
+Twitter: [@OpenJailbreak](https://twitter.com/OpenJailbreak)
+IRC: chat.freenode.net, #OpenJailbreak
 
-<p>A (Home)brew-friendly installation script (Mac OS X only).</p>
+A (Home)brew installation script (Mac OS X only).
 
-<h1>HOW TO INSTALL</h1>
+<h2>HOW TO INSTALL</h2>
 
-<p>1- Pick your workspace folder</p>
+1- Pick your workspace folder in Terminal (using ``cd``)
 
-<p>2- Run the following commands in Terminal:<br>
-<strong>git clone https://github.com/Keyaku/OpenJailbreak.git</strong><br>
-<strong>cd OpenJailbreak</strong><br>
-<strong>./autobrew.sh</strong><br></p>
+2- Run the following commands:  
+<code>**git clone https://github.com/Keyaku/OpenJailbreak.git**</code>
+<code>**cd OpenJailbreak**</code>
+<code>**./autobrew.sh**</code>
 
-<p>Since I'm still making the old script available, you can use it. 
-It's better prepared for people who use Linux (however, take in consideration that the
-original script is a <i>huge</i> mess and is not supported by the original author any longer until
-further notice).</p>
+=======================
 
-<p>This single command fetches and builds the latest versions of all OpenJailbreak libraries.
-Using the Homebrew script makes it more easy to update or uninstall the OpenJailbreak libs
-without affecting much of the /usr/local directory and subdirectories.<br>
-This script doesn't even make use of <strong>sudo</strong>, which removes the hassle of putting in a
-password every time you run it. Plus, <strong>sudo</strong> is <i>dangerous</i>.</p>
+This script fetches and builds the latest versions of all OpenJailbreak libraries.
+It'll make it more easy for you to update or uninstall the OpenJailbreak libs
+without affecting much of the /usr/local directory and subdirectories.  
+This script doesn't even make use of `sudo`, which removes the hassle of putting in your
+password every time you run it. Plus, `sudo` is <i>dangerous</i>.
 
-<p>For people who are (much) better at Brew Cooking than me:<br>
-I'm still green in Ruby programing, so I haven't created a Gem for each library yet.<br>
-For now, what the script does is install the libraries in the Cellar for easy uninstalling 
-and is capable of detecting newer versions of the libraries ONLY WITH the script.
-</p>
+Note: __autobuild.sh__ is DarkMalloc's older script. It mostly has Linux in mind
+so it can work on both OS X and Linux. Keep in mind, however, that this script is a
+<i>huge</i> mess and is not supported by the original author any longer, at least for now.

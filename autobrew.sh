@@ -110,8 +110,6 @@ RET_invalid=2
 RET_help=3
 RET_exists=4
 RET_install=5
-RET_hasBrew=10
-RET_hasNoBrew=11
 RET_pingError=68
 
 
@@ -124,12 +122,8 @@ noInternet=0
 # FUNCTIONS
 
 check_for_brew() {
-	# Checks for Homebrew
-	if [ ! -e /usr/local/bin/brew ]; then
-		return $RET_hasNoBrew
-	fi
-
-	return $RET_hasBrew
+	which brew
+	return $?
 }
 
 check_for_connect() {
@@ -145,19 +139,19 @@ check_stuff() {
 
 	# First things first: check if user has asked for help.
 	if [ "$(echo $* | grep help)" ]; then
-		echo -e $STR_usage; exit $RET_help
+		echo -e $STR_usage
+		exit $RET_help
 	fi
 
 	# If we are to download stuff: check for internet.
 	check_for_connect
 
-	if [ $noInternet -eq 1 ]; then
-		# Then, check for Homebrew.
-		check_for_brew
-		# If Homebrew isn't installed, why on Earth are you running this script, dawg?!
-		if [ $? -eq $RET_hasNoBrew ]; then
-			echo -e $STR_noBrew; exit $RET_hasNoBrew
-		fi
+	# Then, check for Homebrew.
+	check_for_brew
+	# If Homebrew isn't installed, why on Earth are you running this script, dawg?!
+	if [ $? -eq $RET_error ]; then
+		echo -e $STR_noBrew
+		exit $RET_error
 	fi
 
 	# Check for required kegs to be installed before digging into OJ libs installation

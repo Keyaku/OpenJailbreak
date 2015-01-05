@@ -135,7 +135,7 @@ check_for_connect() {
 }
 
 check_stuff() {
-	# Checks for required installs, connection to the internet, and many more
+# Checks for required installs, connection to the internet, and many more
 
 	# First things first: check if user has asked for help.
 	if [ "$(echo $* | grep help)" ]; then
@@ -170,51 +170,57 @@ requirements() {
 # Packages management
 grab_package() {
 # 2 arguments
-# 	$1 - kegName
-# 	$2 - keg
-	if [ ! -d ./$2 ]; then
-		currentlyDoing="Fetching $1"
+# 	$1 - keg
+# 	$2 - kegName
+
+	if [ ! -d ./$1 ]; then
+		currentlyDoing="Fetching $2"
 		echo -e "$currentlyDoing..."
 
-		git clone "$libSrcOJ/$2.git"
+		git clone "$libSrcOJ/$1.git"
 		if [ $? -ne $RET_success ]; then
 			add_failed_lib $currentlyDoing
 		fi
 		echo
 	else
-		echo -e "$1 already fetched (directory exists)."
+		echo -e "$2 already fetched (directory exists)."
 	fi
 }
 
 prep_package() {
 # 2 arguments
-# 	$1 - kegName
-# 	$2 - keg
+# 	$1 - keg
+# 	$2 - kegName
+# 1 evaluation
+#	$3 - kegDir
+
 	# If configure.ac file exists, use the version that it provides (ugliest way but also the quickest)
 	if [ -e configure.ac ]; then
 		kegVersion=$(cat configure.ac | grep "AC_INIT" | cut -d',' -f2 | sed 's/ //' | sed 's/).*//')
 	else # use the number from the package's name instead (less accurate)
-		kegVersion=$(echo $2 | sed 's/.*-//').0
+		kegVersion=$(echo $1 | sed 's/.*-//').0
 	fi
 	# Setting the keg's place in the Cellar
-	kegDir=$cellar/$1/$kegVersion
+	eval "$3='$cellar/$2/$kegVersion'"
 	# If the keg exists...
-	if [ -d $kegDir ]; then
+	if [ -d $3 ]; then
 		# If it is up-to-date, skip it
-		if [ $kegVersion != $(ls $cellar/$1/)  ]; then
-			echo -e "$Note $(brew ls $1 --versions) is already installed and updated. Skipping.\n"
+		if [ $kegVersion != $(ls $cellar/$2/)  ]; then
+			echo -e "$Note $(brew ls $2 --versions) is already installed and updated. Skipping.\n"
 			return $RET_exists
 		fi
 	fi
 }
 
 install_package() {
-# 1 argument
+# 2 arguments
 # 	$1 - kegName
+#	$2 - kegDir
+
 	currentlyDoing="Configuring $1"
 	echo -e "${BYel}$currentlyDoing...${Yel}"
 	./autogen.sh > /dev/null		# Makes less visual garbage
-	./configure --prefix=$kegDir
+	./configure --prefix=$2
 
 	currentlyDoing="Building $1"
 	echo -e "${BYel}$currentlyDoing...${Yel}"
@@ -226,7 +232,7 @@ install_package() {
 
 	# Let's check if the installation was successful
 	currentlyDoing="Installing $1"
-	if [ -d $kegDir ]; then
+	if [ -d $2 ]; then
 		echo -e "${BYel}$currentlyDoing...${Yel}"
 		brew link $1
 	else
@@ -238,7 +244,8 @@ install_package() {
 add_failed_lib() {
 # 2 arguments:
 #	$1 - What failed
-#	$2 - lib/keg name
+#	$2 - keg/kegName
+
 	failedLibs+=("$1 $2")
 }
 
@@ -247,6 +254,7 @@ build_libs() {
 	for keg in ${libs[@]:-$(echo ${mainLibs[@]})}; do
 		# Grabbing the lib's name
 		kegName=$(echo $keg | sed 's/-.*//')
+		kegDir=""
 
 		# Grab our package! (only if there's internet)
 		if [ $noInternet == 0 ]; then grab_package $kegName $keg; fi
@@ -254,9 +262,9 @@ build_libs() {
 		if [ -d $keg ]; then
 			# Prepare our package!
 			cd $keg
-			prep_package $kegName $keg
+			prep_package $kegName $keg $kegDir
 			# INSTALL DAT SHIT (... only if it's not installed)
-			if [ $? != $RET_exists ]; then install_package $kegName; fi
+			if [ $? != $RET_exists ]; then install_package $kegName $kegDir; fi
 		fi
 
 		# Prevents any (possible) mistake from OJ's scripts for doing "cd .." more/less than enough
@@ -271,6 +279,7 @@ build_libs() {
 which_libs() {
 # $# arguments
 #	$@ - libraries to install
+
 	libs=""
 	while [ "$1" != "" ]; do
 		if [ -z "$(echo ${mainLibs[@]} | grep $1)" ]; then

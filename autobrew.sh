@@ -50,7 +50,7 @@ libpoisonSubs=( ${libanthraxSubs[@]} ${libarsenicSubs[@]} \
 
 # LIBRARIES
 mainLibs=( ${libabsintheSubs[@]} \
-"libimobiledevice-1" ${libimobiledeviceSubs[@]} \
+${libimobiledeviceSubs[@]} \
 "libpois0n-1" ${libpoisonSubs[@]} \
 #"libqmi-1" ${libqmiSubs[@]}
 )
@@ -104,6 +104,7 @@ STR_conclusion="\n${BGre}Installation complete${RCol}.\nTo uninstall a lib, exec
 
 
 # STATUS
+RET_value=""
 RET_success=0
 RET_error=1
 RET_invalid=2
@@ -176,8 +177,7 @@ grab_package() {
 	if [ ! -d ./$1 ]; then
 		currentlyDoing="Fetching $2"
 		echo -e "$currentlyDoing..."
-
-		git clone "$libSrcOJ/$1.git"
+		git clone "$libSrcOJ/$2.git"
 		if [ $? -ne $RET_success ]; then
 			add_failed_lib $currentlyDoing
 		fi
@@ -189,24 +189,24 @@ grab_package() {
 
 prep_package() {
 # 2 arguments
-# 	$1 - keg
-# 	$2 - kegName
-# 1 evaluation
-#	$3 - kegDir
+# 	$1 - kegName
+# 	$2 - keg
+# 1 return
+#	$RET_value - kegDir
 
 	# If configure.ac file exists, use the version that it provides (ugliest way but also the quickest)
 	if [ -e configure.ac ]; then
 		kegVersion=$(cat configure.ac | grep "AC_INIT" | cut -d',' -f2 | sed 's/ //' | sed 's/).*//')
 	else # use the number from the package's name instead (less accurate)
-		kegVersion=$(echo $1 | sed 's/.*-//').0
+		kegVersion=$(echo $2 | sed 's/.*-//').0
 	fi
 	# Setting the keg's place in the Cellar
-	eval "$3='$cellar/$2/$kegVersion'"
+	RET_value="$cellar/$1/$kegVersion"
 	# If the keg exists...
-	if [ -d $3 ]; then
+	if [ -e "$RET_value" ]; then
 		# If it is up-to-date, skip it
-		if [ $kegVersion != $(ls $cellar/$2/)  ]; then
-			echo -e "$Note $(brew ls $2 --versions) is already installed and updated. Skipping.\n"
+		if [ $kegVersion != $(ls $cellar/$1/)  ]; then
+			echo -e "$Note $(brew ls $1 --versions) is already installed and updated. Skipping.\n"
 			return $RET_exists
 		fi
 	fi
@@ -262,9 +262,12 @@ build_libs() {
 		if [ -d $keg ]; then
 			# Prepare our package!
 			cd $keg
-			prep_package $kegName $keg $kegDir
+			prep_package $kegName $keg
 			# INSTALL DAT SHIT (... only if it's not installed)
-			if [ $? != $RET_exists ]; then install_package $kegName $kegDir; fi
+			if [ $? != $RET_exists ]; then
+				kegDir="$RET_value"
+				install_package $kegName $kegDir
+			fi
 		fi
 
 		# Prevents any (possible) mistake from OJ's scripts for doing "cd .." more/less than enough

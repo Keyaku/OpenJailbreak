@@ -72,7 +72,7 @@ brewWebInstall="https://raw.github.com/Homebrew/homebrew/go/install"
 
 
 # STRINGS
-Warn="${URed}Warning${Red}:${RCol}"
+Warn="${BYel}Warning${Yel}:${RCol}"
 
 Note="${UWhi}Notice${Whi}:${RCol}"
 
@@ -159,6 +159,11 @@ check_stuff() {
 	requirements
 }
 
+currently_doing() {
+	STR_currentlyDoing ="$1"
+	echo -e "${BYel}$STR_currentlyDoing ...${Yel}"
+}
+
 requirements() {
 	# Homebrew already provides stable kegs needed for OpenJailbreak; we shall use them
 	echo -e "Checking if required packages are installed..."
@@ -175,11 +180,10 @@ grab_package() {
 # 	$2 - kegName
 
 	if [ ! -d ./$1 ]; then
-		currentlyDoing="Fetching $2"
-		echo -e "$currentlyDoing..."
+		currently_doing "Fetching $2"
 		git clone "$libSrcOJ/$2.git"
 		if [ $? -ne $RET_success ]; then
-			add_failed_lib $currentlyDoing
+			add_failed_lib $STR_currentlyDoing
 		fi
 		echo
 	else
@@ -217,26 +221,29 @@ install_package() {
 # 	$1 - kegName
 #	$2 - kegDir
 
-	currentlyDoing="Configuring $1"
-	echo -e "${BYel}$currentlyDoing...${Yel}"
+	currently_doing "Configuring $1"
 	./autogen.sh > /dev/null		# Makes less visual garbage
+	# Making sure auto config is correctly set up (otherwise causes ridiculous errors)
+	aclocal -I /usr/local/share/aclocal
+	autoheader
+	automake
+	autoconf
+	# Finally launching configure
 	./configure --prefix=$2
 
-	currentlyDoing="Building $1"
-	echo -e "${BYel}$currentlyDoing...${Yel}"
+	currently_doing "Building $1"
 	make && make install
 	if [ $? -ne 0 ]; then
-		add_failed_lib $currentlyDoing
+		add_failed_lib $STR_currentlyDoing
 		return $RET_error
 	fi
 
 	# Let's check if the installation was successful
-	currentlyDoing="Installing $1"
+	currently_doing "Installing $1"
 	if [ -d $2 ]; then
-		echo -e "${BYel}$currentlyDoing...${Yel}"
 		brew link $1
 	else
-		add_failed_lib $currentlyDoing
+		add_failed_lib $STR_currentlyDoing
 	fi
 	echo -e "${RCol}"
 }

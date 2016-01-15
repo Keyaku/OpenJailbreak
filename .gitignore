@@ -1,0 +1,5 @@
+# System files
+*.DS_Store
+
+# Library directories
+lib*

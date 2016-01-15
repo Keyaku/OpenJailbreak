@@ -22,7 +22,7 @@ UBlu='\033[4;34m'				# Underline Blue, for links
 # ----------------- LIBS, HERE WE GO -----------------
 
 # AVAILABLE KEGS
-requiredKegs=( "openssl" "libtool" "zlib" "libplist" "usbmuxd" "libimobiledevice" )
+requiredKegs=( "openssl" "libtool" "lzlib" "libplist" "usbmuxd" "libimobiledevice" )
 
 
 # SUB-LIBRARIES
@@ -168,7 +168,11 @@ requirements() {
 	# Homebrew already provides stable kegs needed for OpenJailbreak; we shall use them
 	echo -e "Checking if required packages are installed..."
 	for i in "${requiredKegs[@]}"; do
-		if [ ! -e $cellar/$i -a $noInternet -eq 0 ]; then brew install $i; fi
+		if [ ! -e $cellar/$i -a $noInternet -eq 0 ]; then
+			if [ "$(brew info $i | grep -E "Not installed")" ]; then
+				brew install $i
+			fi
+		fi
 	done
 	echo -e "All required packages are installed!\n"
 }

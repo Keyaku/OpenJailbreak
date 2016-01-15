@@ -160,7 +160,7 @@ check_stuff() {
 }
 
 currently_doing() {
-	STR_currentlyDoing ="$1"
+	STR_currentlyDoing="$1"
 	echo -e "${BYel}$STR_currentlyDoing ...${Yel}"
 }
 
